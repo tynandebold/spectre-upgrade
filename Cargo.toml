@@ -2,6 +2,18 @@
 members = ["crates/spectre-core", "crates/spectre-cli", "crates/spectre-vault", "src-tauri"]
 resolver = "2"
 
+# Optimize only the KDF crates in dev builds, so scrypt (the master-key function)
+# runs in well under a second at unlock. Everything else stays unoptimized for
+# fast incremental compiles.
+[profile.dev.package.scrypt]
+opt-level = 3
+
+[profile.dev.package.salsa20]
+opt-level = 3
+
+[profile.dev.package.sha2]
+opt-level = 3
+
 # Release profile lives at the workspace root (member-crate profiles are ignored).
 [profile.release]
 codegen-units = 1

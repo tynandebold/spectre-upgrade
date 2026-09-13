@@ -31,6 +31,7 @@ export default function App() {
 
   const [sites, setSites] = useState<SiteView[]>([]);
   const [filter, setFilter] = useState("");
+  const [sortMode, setSortMode] = useState<"alpha" | "recent">("alpha");
   const [selectedName, setSelectedName] = useState<string | null>(null);
 
   const [counter, setCounter] = useState(1);
@@ -55,6 +56,17 @@ export default function App() {
 
     return sites.filter((s) => s.name.toLowerCase().includes(q));
   }, [sites, filter]);
+
+  const displayed = useMemo(() => {
+    if (sortMode === "alpha") {
+      return filtered;
+    }
+
+    return [...filtered].sort(
+      (a, b) =>
+        (b.lastUsed || "").localeCompare(a.lastUsed || "") || a.name.localeCompare(b.name),
+    );
+  }, [filtered, sortMode]);
 
   const canAddNew =
     filter.trim().length > 0 &&
@@ -133,6 +145,28 @@ export default function App() {
     setLoginType(existing?.loginType ?? 0);
     setUrl(existing?.url ?? "");
     setStatus(null);
+  }
+
+  // One-click: selecting a site also copies its password (the common action).
+  async function openAndCopy(name: string, existing: SiteView | null) {
+    selectSite(name, existing);
+
+    const c = existing?.counter ?? 1;
+    const t = existing?.typeCode ?? 17;
+    const l = existing?.loginType ?? 0;
+
+    if (t >= 1024) {
+      return;
+    }
+
+    const d = await api.derive(name, c, t, l);
+
+    if (d.password) {
+      await api.copy(d.password);
+      setStatus(`Copied ${name}`);
+      await api.recordUse(name, new Date().toISOString());
+      await refreshSites();
+    }
   }
 
   async function doCopy(label: string, text: string | null) {
@@ -264,21 +298,37 @@ export default function App() {
 
       <div className="panes">
         <aside className="list">
-          {canAddNew && (
-            <button className="list-item add" onClick={() => selectSite(filter.trim(), null)}>
-              + Use “{filter.trim()}”
-            </button>
-          )}
-          {filtered.map((s) => (
+          <div className="list-sort segmented">
             <button
-              className={`list-item ${s.name === selectedName ? "selected" : ""}`}
-              key={s.name}
-              onClick={() => selectSite(s.name, s)}
+              className={sortMode === "alpha" ? "active" : ""}
+              onClick={() => setSortMode("alpha")}
             >
-              <span className="site-name">{s.name}</span>
-              <span className="site-meta">{typeLabel(s.typeCode)}</span>
+              A–Z
             </button>
-          ))}
+            <button
+              className={sortMode === "recent" ? "active" : ""}
+              onClick={() => setSortMode("recent")}
+            >
+              Recent
+            </button>
+          </div>
+          <div className="list-scroll">
+            {canAddNew && (
+              <button className="list-item add" onClick={() => selectSite(filter.trim(), null)}>
+                + Use “{filter.trim()}”
+              </button>
+            )}
+            {displayed.map((s) => (
+              <button
+                className={`list-item ${s.name === selectedName ? "selected" : ""}`}
+                key={s.name}
+                onClick={() => openAndCopy(s.name, s)}
+              >
+                <span className="site-name">{s.name}</span>
+                <span className="site-meta">{typeLabel(s.typeCode)}</span>
+              </button>
+            ))}
+          </div>
           <div className="list-footer">{sites.length} sites</div>
         </aside>
 
@@ -310,7 +360,11 @@ export default function App() {
               <div className="field">
                 <div className="field-label">Password</div>
                 <div className="value-row">
-                  <code className="value big">
+                  <code
+                    className="value big"
+                    onClick={() => doCopy("password", derived?.password ?? null)}
+                    title="Click to copy"
+                  >
                     {isStateful
                       ? derived?.password ?? "— stored in original app —"
                       : derived?.password ?? "…"}
@@ -353,10 +407,16 @@ export default function App() {
               <div className="field">
                 <div className="field-label">Login name</div>
                 <div className="value-row">
-                  <code className="value">{derived?.login ?? "…"}</code>
+                  <code
+                    className="value"
+                    onClick={() => doCopy("login", derived?.login ?? null)}
+                    title="Click to copy"
+                  >
+                    {derived?.login ?? "…"}
+                  </code>
                   <button onClick={() => doCopy("login", derived?.login ?? null)}>copy</button>
                 </div>
-                <div className="toggle">
+                <div className="toggle segmented">
                   <button className={loginType === 0 ? "active" : ""} onClick={() => setLoginType(0)}>
                     Standard
                   </button>
@@ -369,7 +429,13 @@ export default function App() {
               <div className="field">
                 <div className="field-label">Security answer (generic)</div>
                 <div className="value-row">
-                  <code className="value">{derived?.answer ?? "…"}</code>
+                  <code
+                    className="value"
+                    onClick={() => doCopy("answer", derived?.answer ?? null)}
+                    title="Click to copy"
+                  >
+                    {derived?.answer ?? "…"}
+                  </code>
                   <button onClick={() => doCopy("answer", derived?.answer ?? null)}>copy</button>
                 </div>
               </div>

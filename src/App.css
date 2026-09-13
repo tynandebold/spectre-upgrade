@@ -152,9 +152,21 @@ select:focus {
 /* ---- Site list ---- */
 
 .list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   border-right: 1px solid var(--border);
-  overflow-y: auto;
   background: var(--panel);
+}
+
+.list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.list-sort {
+  margin: 8px 12px 4px;
 }
 
 .list-item {
@@ -272,6 +284,11 @@ select:focus {
   background: var(--bg);
   border: 1px solid var(--border);
   word-break: break-all;
+  cursor: pointer;
+}
+
+.value:hover {
+  border-color: var(--accent);
 }
 
 .value.big {
@@ -297,23 +314,47 @@ select:focus {
 }
 
 .toggle {
-  display: flex;
-  gap: 0;
   margin-top: 8px;
 }
 
-.toggle button {
-  border-right-width: 0;
+/* Segmented control: one bordered container, dividers between segments, solid
+   accent for the active segment. */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
 }
 
-.toggle button:last-child {
-  border-right-width: 1px;
+.segmented button {
+  border: none;
+  border-radius: 0;
+  background: var(--panel);
+  color: var(--muted);
+  padding: 6px 18px;
 }
 
-.toggle button.active {
+.segmented button + button {
+  border-left: 1px solid var(--border);
+}
+
+.segmented button:hover:not(.active) {
+  color: var(--text);
+  border-color: var(--border);
   background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
+}
+
+.segmented button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.list-sort.segmented {
+  display: flex;
+}
+
+.list-sort.segmented button {
+  flex: 1;
+  padding: 4px 12px;
+  font-size: 12px;
 }
 
 .url-input {
