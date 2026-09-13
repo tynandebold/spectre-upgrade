@@ -1,3 +1,11 @@
 [workspace]
-members = ["crates/spectre-core", "crates/spectre-cli", "crates/spectre-vault"]
+members = ["crates/spectre-core", "crates/spectre-cli", "crates/spectre-vault", "src-tauri"]
 resolver = "2"
+
+# Release profile lives at the workspace root (member-crate profiles are ignored).
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

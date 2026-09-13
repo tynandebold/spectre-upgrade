@@ -205,6 +205,16 @@ impl Identity {
         }
     }
 
+    /// Construct from an already-derived master key, skipping scrypt. Use when
+    /// the caller needs the raw key elsewhere (e.g. to encrypt a vault) and
+    /// wants to avoid deriving it twice.
+    pub fn from_master_key(full_name: &str, key: [u8; MASTER_KEY_LEN]) -> Self {
+        Identity {
+            full_name: full_name.to_string(),
+            key,
+        }
+    }
+
     pub fn full_name(&self) -> &str {
         &self.full_name
     }

@@ -1,0 +1,22 @@
+[package]
+name = "spectre-upgrade-app"
+version = "0.1.0"
+description = "spectre-upgrade desktop app"
+authors = ["Tynan DeBold"]
+edition = "2021"
+
+[lib]
+name = "spectre_upgrade_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+spectre-core = { path = "../crates/spectre-core" }
+spectre-vault = { path = "../crates/spectre-vault" }
