@@ -264,6 +264,35 @@ fn import_vault(path: String, state: State<AppState>) -> Result<usize, String> {
     Ok(session.vault.sites.len())
 }
 
+/// Import from the live Spectre app's own data store (its Group Container),
+/// keyed by the unlocked user's full name. This is the current source of truth
+/// and sidesteps the app's broken export entirely.
+#[tauri::command]
+fn import_from_app(app: AppHandle, state: State<AppState>) -> Result<usize, String> {
+    let mut guard = state.session.lock().map_err(|_| lock_poisoned())?;
+    let session = guard.as_mut().ok_or_else(locked_err)?;
+
+    let home = app.path().home_dir().map_err(|e| e.to_string())?;
+    let path = home
+        .join("Library/Group Containers/group.app.spectre/Documents")
+        .join(format!("{}.mpjson", session.identity.full_name()));
+
+    if !path.exists() {
+        return Err(format!("no live Spectre data found at {}", path.display()));
+    }
+
+    let imported = import_mpjson(&path).map_err(|e| e.to_string())?;
+    session.vault = imported;
+
+    let key = session.key;
+    session
+        .vault
+        .save_encrypted(&session.vault_path, &key)
+        .map_err(|e| e.to_string())?;
+
+    Ok(session.vault.sites.len())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -278,7 +307,8 @@ pub fn run() {
             copy,
             save_site,
             record_use,
-            import_vault
+            import_vault,
+            import_from_app
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

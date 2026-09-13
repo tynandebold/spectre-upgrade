@@ -185,6 +185,21 @@ export default function App() {
     }
   }
 
+  async function doSyncFromApp() {
+    setBusy(true);
+
+    try {
+      const count = await api.importFromApp();
+
+      setStatus(`Synced ${count} sites from Spectre`);
+      await refreshSites();
+    } catch (err) {
+      setStatus(String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function doLock() {
     await api.lock();
     setUnlocked(false);
@@ -237,8 +252,11 @@ export default function App() {
           value={filter}
         />
         <div className="topbar-actions">
+          <button disabled={busy} onClick={doSyncFromApp}>
+            Sync from app
+          </button>
           <button disabled={busy} onClick={doImport}>
-            Import…
+            Import file…
           </button>
           <button onClick={doLock}>Lock</button>
         </div>
@@ -266,7 +284,20 @@ export default function App() {
 
         <section className="detail">
           {!selectedName ? (
-            <div className="empty">Select a site, or type a domain to create one.</div>
+            sites.length === 0 ? (
+              <div className="empty">
+                <p>No sites yet.</p>
+                <button disabled={busy} onClick={doSyncFromApp}>
+                  Sync from Spectre app
+                </button>
+                <p className="hint">
+                  Pulls your current site list straight from the Spectre app's
+                  own data (no export needed).
+                </p>
+              </div>
+            ) : (
+              <div className="empty">Select a site, or type a domain to create one.</div>
+            )
           ) : (
             <>
               <div className="detail-head">

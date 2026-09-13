@@ -50,4 +50,6 @@ export const api = {
     invoke<void>("record_use", { name, nowIso }),
 
   importVault: (path: string) => invoke<number>("import_vault", { path }),
+
+  importFromApp: () => invoke<number>("import_from_app"),
 };
