@@ -85,9 +85,10 @@ cp -R "target/release/bundle/macos/Spectre Upgrade.app" /Applications/
 - "Own (saved)" entries for the handful of passwords that can't be derived.
 - Import a Spectre `.mpjson` export; **working export** to a re-importable
   `.mpjson` or a full encrypted backup.
-- **Touch ID** unlock (opt-in), master key held only in memory, clipboard
-  auto-clears after 30s, auto-lock after 5 minutes idle, encrypted-at-rest
-  vault, strictly offline.
+- **Touch ID** unlock (opt-in). By default the master key lives only in memory;
+  enabling Touch ID stores it in your macOS Keychain (see [How it works](#how-it-works)).
+  Clipboard auto-clears after 30s, auto-lock after 5 minutes idle,
+  encrypted-at-rest vault, strictly offline.
 
 ## How it works
 
@@ -95,6 +96,11 @@ The 64-byte master key is derived once with scrypt and kept only in the Rust
 process; it never crosses into the webview. Derived secrets are written to the
 clipboard from Rust. The site list and any stored values are encrypted at rest
 with a key derived from your master key (XChaCha20-Poly1305).
+
+Enabling **Touch ID** is the one exception to "nothing persisted": it saves the
+master key in your login Keychain so a fingerprint can unlock the app, a
+deliberate convenience tradeoff. Choose **Disable Touch ID** to remove it and
+go back to memory-only.
 
 ```
 crates/spectre-core/    Pure Rust derivation engine (algorithm v3). No I/O.
