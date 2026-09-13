@@ -39,6 +39,8 @@ export const api = {
 
   copy: (text: string) => invoke<void>("copy", { text }),
 
+  clearClipboard: (text: string) => invoke<void>("clear_clipboard", { text }),
+
   saveSite: (
     name: string,
     counter: number,

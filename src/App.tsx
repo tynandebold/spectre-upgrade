@@ -138,6 +138,30 @@ export default function App() {
     }
   }, [selectedName]);
 
+  // Auto-lock after 5 minutes of inactivity.
+  useEffect(() => {
+    if (!unlocked) {
+      return;
+    }
+
+    let timer: ReturnType<typeof setTimeout>;
+
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => doLock(), 5 * 60 * 1000);
+    };
+
+    const events = ["mousemove", "keydown", "click"];
+
+    events.forEach((e) => window.addEventListener(e, reset));
+    reset();
+
+    return () => {
+      clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, reset));
+    };
+  }, [unlocked]);
+
   async function doUnlock(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -183,10 +207,18 @@ export default function App() {
 
     if (d.password) {
       await api.copy(d.password);
-      setStatus(`Copied ${name}`);
+      scheduleClipboardClear(d.password);
+      setStatus(`Copied ${name} · clears in 30s`);
       await api.recordUse(name, new Date().toISOString());
       await refreshSites();
     }
+  }
+
+  // Clear the clipboard 30s after a copy (only if it still holds our value).
+  function scheduleClipboardClear(text: string) {
+    setTimeout(() => {
+      api.clearClipboard(text).catch(() => {});
+    }, 30000);
   }
 
   async function doCopy(label: string, text: string | null) {
@@ -195,7 +227,8 @@ export default function App() {
     }
 
     await api.copy(text);
-    setStatus(`Copied ${label}`);
+    scheduleClipboardClear(text);
+    setStatus(`Copied ${label} · clears in 30s`);
 
     if (label === "password" && selectedName) {
       await api.recordUse(selectedName, new Date().toISOString());

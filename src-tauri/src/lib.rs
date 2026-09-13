@@ -200,6 +200,21 @@ fn copy(app: AppHandle, text: String) -> Result<(), String> {
     app.clipboard().write_text(text).map_err(|e| e.to_string())
 }
 
+/// Clear the clipboard, but only if it still holds `text` (so a later copy by
+/// the user is never clobbered). Called by the frontend on a timer.
+#[tauri::command]
+fn clear_clipboard(app: AppHandle, text: String) -> Result<(), String> {
+    if let Ok(current) = app.clipboard().read_text() {
+        if current == text {
+            app.clipboard()
+                .write_text(String::new())
+                .map_err(|e| e.to_string())?;
+        }
+    }
+
+    Ok(())
+}
+
 /// Create or update a site's settings, then persist the vault.
 #[tauri::command]
 fn save_site(
@@ -348,6 +363,7 @@ pub fn run() {
             list_sites,
             derive,
             copy,
+            clear_clipboard,
             save_site,
             record_use,
             import_vault,
