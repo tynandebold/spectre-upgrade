@@ -6,6 +6,7 @@ description = "Local CLI for verifying spectre-core derivation against the refer
 
 [dependencies]
 spectre-core = { path = "../spectre-core" }
+spectre-vault = { path = "../spectre-vault" }
 rpassword = "7"
 
 [[bin]]
