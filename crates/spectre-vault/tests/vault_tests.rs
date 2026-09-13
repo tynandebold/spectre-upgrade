@@ -2,7 +2,7 @@
 //! suite is hermetic and never touches real vault data.
 
 use spectre_core::master_key;
-use spectre_vault::{import_mpjson_str, Vault};
+use spectre_vault::{export_mpjson_string, import_mpjson_str, Vault};
 
 const FIXTURE: &str = r#"{
   "user": {"full_name": "Robert Lee Mitchell", "algorithm": 3, "default_type": 17, "avatar": 0},
@@ -71,6 +71,28 @@ fn wrong_key_fails_to_decrypt() {
     let wrong = master_key("Robert Lee Mitchell", "not the password");
 
     assert!(Vault::from_encrypted_bytes(&bytes, &wrong).is_err());
+}
+
+#[test]
+fn export_mpjson_round_trips_metadata() {
+    let vault = import_mpjson_str(FIXTURE).unwrap();
+    let text = export_mpjson_string(&vault, "2026-09-13T00:00:00Z");
+    let reimported = import_mpjson_str(&text).unwrap();
+
+    assert_eq!(reimported.sites.len(), vault.sites.len());
+
+    for (name, s) in &vault.sites {
+        let r = &reimported.sites[name];
+
+        assert_eq!(r.counter, s.counter);
+        assert_eq!(r.type_code, s.type_code);
+        assert_eq!(r.login_type, s.login_type);
+        assert_eq!(r.uses, s.uses);
+        assert_eq!(r.last_used, s.last_used);
+    }
+
+    // Redacted: no stored secret leaks into the export.
+    assert!(!text.contains("AAECAwQFBgcICQoLDA0ODw=="));
 }
 
 #[test]

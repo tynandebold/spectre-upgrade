@@ -47,3 +47,34 @@ pub fn import_mpjson(path: impl AsRef<Path>) -> Result<Vault> {
 
     import_mpjson_str(&text)
 }
+
+/// Serialize a vault to a standard, re-importable `.mpjson` string (format 1,
+/// redacted). Derivable passwords are reconstructed on import, so no secret
+/// values are written; stored "Own" values are intentionally omitted (use the
+/// encrypted backup to preserve those).
+pub fn export_mpjson_string(vault: &Vault, date: &str) -> String {
+    let mut sites = serde_json::Map::new();
+    for (name, site) in &vault.sites {
+        let mut entry = serde_json::Map::new();
+        entry.insert("counter".into(), site.counter.into());
+        entry.insert("algorithm".into(), site.algorithm.into());
+        entry.insert("type".into(), site.type_code.into());
+        entry.insert("login_type".into(), site.login_type.into());
+        entry.insert("uses".into(), site.uses.into());
+        entry.insert("last_used".into(), site.last_used.clone().into());
+        sites.insert(name.clone(), serde_json::Value::Object(entry));
+    }
+
+    let doc = serde_json::json!({
+        "export": { "date": date, "redacted": true, "format": 1 },
+        "user": {
+            "avatar": vault.user.avatar,
+            "full_name": vault.user.full_name,
+            "algorithm": vault.user.algorithm,
+            "default_type": vault.user.default_type,
+        },
+        "sites": serde_json::Value::Object(sites),
+    });
+
+    serde_json::to_string_pretty(&doc).expect("vault is always serializable")
+}

@@ -10,7 +10,7 @@ mod mpjson;
 mod models;
 
 pub use models::{Site, User, Vault, STATEFUL_CLASS};
-pub use mpjson::{import_mpjson, import_mpjson_str};
+pub use mpjson::{export_mpjson_string, import_mpjson, import_mpjson_str};
 
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;

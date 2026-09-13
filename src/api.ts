@@ -54,4 +54,9 @@ export const api = {
   importVault: (path: string) => invoke<number>("import_vault", { path }),
 
   importFromApp: () => invoke<number>("import_from_app"),
+
+  exportMpjson: (path: string, nowIso: string) =>
+    invoke<number>("export_mpjson", { path, nowIso }),
+
+  exportBackup: (path: string) => invoke<void>("export_backup", { path }),
 };

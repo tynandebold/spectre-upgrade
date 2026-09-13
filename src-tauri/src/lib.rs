@@ -306,6 +306,36 @@ fn import_from_app(app: AppHandle, state: State<AppState>) -> Result<usize, Stri
     Ok(session.vault.sites.len())
 }
 
+/// Export a standard, re-importable `.mpjson` (redacted: derivable passwords are
+/// reconstructed on import, so no secrets are written). This is the export the
+/// original app never got right. `now_iso` is supplied by the caller.
+#[tauri::command]
+fn export_mpjson(path: String, now_iso: String, state: State<AppState>) -> Result<usize, String> {
+    let guard = state.session.lock().map_err(|_| lock_poisoned())?;
+    let session = guard.as_ref().ok_or_else(locked_err)?;
+
+    let text = spectre_vault::export_mpjson_string(&session.vault, &now_iso);
+    std::fs::write(&path, text).map_err(|e| e.to_string())?;
+
+    Ok(session.vault.sites.len())
+}
+
+/// Export the full vault as an encrypted backup (includes stored "Own" values).
+/// Restore by unlocking with the same master password on any machine.
+#[tauri::command]
+fn export_backup(path: String, state: State<AppState>) -> Result<(), String> {
+    let guard = state.session.lock().map_err(|_| lock_poisoned())?;
+    let session = guard.as_ref().ok_or_else(locked_err)?;
+
+    let bytes = session
+        .vault
+        .to_encrypted_bytes(&session.key)
+        .map_err(|e| e.to_string())?;
+    std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -321,7 +351,9 @@ pub fn run() {
             save_site,
             record_use,
             import_vault,
-            import_from_app
+            import_from_app,
+            export_mpjson,
+            export_backup
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

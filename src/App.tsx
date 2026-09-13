@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { api, type Derived, type SiteView } from "./api";
 
 const PASSWORD_TYPES = [
@@ -261,6 +261,35 @@ export default function App() {
     }
   }
 
+  async function doExportMpjson() {
+    const path = await save({
+      defaultPath: "spectre-export.mpjson",
+      filters: [{ name: "Spectre export", extensions: ["mpjson"] }],
+    });
+
+    if (typeof path !== "string") {
+      return;
+    }
+
+    const count = await api.exportMpjson(path, new Date().toISOString());
+
+    setStatus(`Exported ${count} sites to .mpjson`);
+  }
+
+  async function doExportBackup() {
+    const path = await save({
+      defaultPath: "spectre-backup.spectre",
+      filters: [{ name: "Encrypted backup", extensions: ["spectre"] }],
+    });
+
+    if (typeof path !== "string") {
+      return;
+    }
+
+    await api.exportBackup(path);
+    setStatus("Encrypted backup saved");
+  }
+
   async function doLock() {
     await api.lock();
     setUnlocked(false);
@@ -352,6 +381,8 @@ export default function App() {
           <button disabled={busy} onClick={doImport}>
             Import file…
           </button>
+          <button onClick={doExportMpjson}>Export…</button>
+          <button onClick={doExportBackup}>Backup…</button>
           <button onClick={doLock}>Lock</button>
         </div>
       </header>
