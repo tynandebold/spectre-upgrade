@@ -1,5 +1,7 @@
 # Spectre Upgrade
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A local, offline desktop password manager for macOS that derives your passwords
 instead of storing them, built as a modern replacement for the unmaintained
 [Spectre](https://spectre.app/) (formerly Master Password) app, with the export
@@ -19,11 +21,22 @@ secret is written to disk, and the app makes **no network requests**.
 > to Spectre for v3 identities, so you can move over without changing a single
 > password.
 
+## Contents
+
+- [Install on macOS](#install-on-macos)
+  - [Option A: Download the app](#option-a-download-the-app)
+  - [Option B: Build from source](#option-b-build-from-source-recommended-for-a-password-tool)
+- [First run](#first-run)
+- [Features](#features)
+- [How it works](#how-it-works)
+- [Develop](#develop)
+- [Credits & license](#credits--license)
+
 ## Install on macOS
 
 Apple silicon (arm64). Intel Macs can build from source (Option B).
 
-### Option A — Download the app
+### Option A: Download the app
 
 1. Download the latest `.dmg` from the
    [**Releases**](https://github.com/tynandebold/spectre-upgrade/releases/latest) page.
@@ -38,7 +51,7 @@ Apple silicon (arm64). Intel Macs can build from source (Option B).
 > xattr -dr com.apple.quarantine "/Applications/Spectre Upgrade.app"
 > ```
 
-### Option B — Build from source (recommended for a password tool)
+### Option B: Build from source (recommended for a password tool)
 
 Building it yourself means you can audit every line, which is the right call for
 software that handles your passwords.
