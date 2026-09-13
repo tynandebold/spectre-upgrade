@@ -43,6 +43,7 @@ export default function App() {
 
   const [derived, setDerived] = useState<Derived | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [touchIdEnabled, setTouchIdEnabled] = useState(false);
 
   const selectedSite = useMemo(
     () => sites.find((s) => s.name === selectedName) ?? null,
@@ -162,6 +163,11 @@ export default function App() {
     };
   }, [unlocked]);
 
+  // Load Touch ID availability once on mount.
+  useEffect(() => {
+    api.touchIdStatus().then(setTouchIdEnabled).catch(() => {});
+  }, []);
+
   async function doUnlock(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -170,6 +176,21 @@ export default function App() {
     try {
       await api.unlock(fullName, masterPassword);
       setMasterPassword("");
+      setUnlocked(true);
+      await refreshSites();
+    } catch (err) {
+      setUnlockError(String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function doTouchIdUnlock() {
+    setBusy(true);
+    setUnlockError(null);
+
+    try {
+      await api.unlockWithTouchId();
       setUnlocked(true);
       await refreshSites();
     } catch (err) {
@@ -331,6 +352,26 @@ export default function App() {
     setDerived(null);
   }
 
+  async function doEnableTouchId() {
+    try {
+      await api.enableTouchId();
+      setTouchIdEnabled(true);
+      setStatus("Touch ID enabled");
+    } catch (err) {
+      setStatus(String(err));
+    }
+  }
+
+  async function doDisableTouchId() {
+    try {
+      await api.disableTouchId();
+      setTouchIdEnabled(false);
+      setStatus("Touch ID disabled");
+    } catch (err) {
+      setStatus(String(err));
+    }
+  }
+
   // Keyboard-first navigation from the search box: arrows move the selection,
   // Enter copies the selected (or top) match, Escape clears the filter.
   function onSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -367,6 +408,11 @@ export default function App() {
       <div className="unlock">
         <form className="unlock-card" onSubmit={doUnlock}>
           <h1>Spectre Upgrade</h1>
+          {touchIdEnabled && (
+            <button className="touchid-btn" disabled={busy} onClick={doTouchIdUnlock} type="button">
+              🔓 Unlock with Touch ID
+            </button>
+          )}
           <label>
             Full name
             <input
@@ -453,7 +499,15 @@ export default function App() {
               </button>
             ))}
           </div>
-          <div className="list-footer">{sites.length} sites</div>
+          <div className="list-footer">
+            <span>{sites.length} sites</span>
+            <button
+              className="linkish"
+              onClick={touchIdEnabled ? doDisableTouchId : doEnableTouchId}
+            >
+              {touchIdEnabled ? "Disable Touch ID" : "Enable Touch ID"}
+            </button>
+          </div>
         </aside>
 
         <section className="detail">

@@ -3312,6 +3312,8 @@ dependencies = [
 name = "spectre-upgrade-app"
 version = "0.1.0"
 dependencies = [
+ "core-foundation",
+ "core-foundation-sys",
  "serde",
  "serde_json",
  "spectre-core",

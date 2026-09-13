@@ -3,7 +3,7 @@ name = "spectre-core"
 version = "0.1.0"
 edition = "2021"
 description = "Stateless password derivation (Spectre / Master Password algorithm v3)."
-license = "MPL-2.0"
+license = "MIT"
 
 [dependencies]
 scrypt = "0.11"

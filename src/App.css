@@ -216,9 +216,34 @@ select:focus {
 }
 
 .list-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 10px 12px;
   color: var(--muted);
   font-size: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.linkish {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.linkish:hover {
+  text-decoration: underline;
+}
+
+.touchid-btn {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  padding: 10px;
+  font-size: 14px;
 }
 
 /* ---- Detail ---- */

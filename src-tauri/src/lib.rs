@@ -13,6 +13,8 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
+mod biometric;
+
 /// An unlocked session. Cleared on `lock` and never serialized.
 struct Session {
     key: [u8; 64],
@@ -144,6 +146,63 @@ fn lock(state: State<AppState>) -> Result<(), String> {
     *state.session.lock().map_err(|_| lock_poisoned())? = None;
 
     Ok(())
+}
+
+/// Whether a Touch ID key is currently stored (no prompt).
+#[tauri::command]
+fn touch_id_status() -> bool {
+    biometric::is_enabled()
+}
+
+/// Store the current session's master key behind Touch ID.
+#[tauri::command]
+fn enable_touch_id(state: State<AppState>) -> Result<(), String> {
+    let guard = state.session.lock().map_err(|_| lock_poisoned())?;
+    let session = guard.as_ref().ok_or_else(locked_err)?;
+
+    biometric::enable(&session.key)
+}
+
+/// Remove the stored Touch ID key.
+#[tauri::command]
+fn disable_touch_id() -> Result<(), String> {
+    biometric::disable()
+}
+
+/// Unlock using the Touch ID-protected key. Recovers the full name from the
+/// stored vault (the key alone is enough to decrypt and derive).
+#[tauri::command]
+fn unlock_with_touch_id(app: AppHandle, state: State<AppState>) -> Result<UnlockResult, String> {
+    let key_bytes = biometric::unlock()?.ok_or_else(|| "Touch ID canceled".to_string())?;
+
+    if key_bytes.len() != 64 {
+        return Err("stored key is invalid".to_string());
+    }
+
+    let mut key = [0u8; 64];
+    key.copy_from_slice(&key_bytes);
+
+    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    let vault_path = dir.join("vault.spectre");
+
+    if !vault_path.exists() {
+        return Err("No saved vault yet - unlock with your master password first.".to_string());
+    }
+
+    let vault = Vault::load_encrypted(&vault_path, &key)
+        .map_err(|_| "the stored key no longer matches your vault".to_string())?;
+    let full_name = vault.user.full_name.clone();
+    let identity = Identity::from_master_key(&full_name, key);
+    let site_count = vault.sites.len();
+
+    *state.session.lock().map_err(|_| lock_poisoned())? = Some(Session {
+        key,
+        identity,
+        vault,
+        vault_path,
+    });
+
+    Ok(UnlockResult { site_count, has_vault: true })
 }
 
 /// All sites, sorted by name (the vault stores them in a BTreeMap).
@@ -360,6 +419,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             unlock,
             lock,
+            touch_id_status,
+            enable_touch_id,
+            disable_touch_id,
+            unlock_with_touch_id,
             list_sites,
             derive,
             copy,

@@ -32,6 +32,14 @@ export const api = {
 
   lock: () => invoke<void>("lock"),
 
+  touchIdStatus: () => invoke<boolean>("touch_id_status"),
+
+  enableTouchId: () => invoke<void>("enable_touch_id"),
+
+  disableTouchId: () => invoke<void>("disable_touch_id"),
+
+  unlockWithTouchId: () => invoke<UnlockResult>("unlock_with_touch_id"),
+
   listSites: () => invoke<SiteView[]>("list_sites"),
 
   derive: (name: string, counter: number, typeCode: number, loginType: number) =>
