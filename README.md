@@ -10,6 +10,8 @@ counter` run through a fixed algorithm (scrypt → HMAC-SHA256 → template) to
 produce the same password every time. There is no password database. Nothing
 secret is written to disk, and the app makes **no network requests**.
 
+![Spectre Upgrade showing the two-pane UI with demo data](docs/screenshot.png)
+
 > [!NOTE]
 > Unofficial and not affiliated with Spectre. This is a clean-room
 > reimplementation of the published **algorithm v3**, verified against the
