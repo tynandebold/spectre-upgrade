@@ -25,7 +25,7 @@ function typeLabel(code: number): string {
 
 export default function App() {
   const [unlocked, setUnlocked] = useState(false);
-  const [fullName, setFullName] = useState("Tynan Hall DeBold");
+  const [fullName, setFullName] = useState("");
   const [masterPassword, setMasterPassword] = useState("");
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
