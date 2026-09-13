@@ -17,8 +17,21 @@ fn main() {
 
     match args.get(1).map(String::as_str) {
         Some("import") => import_cmd(&args),
+        Some("bench") => bench_cmd(),
         None => usage(),
         _ => derive_cmd(&args),
+    }
+}
+
+fn bench_cmd() {
+    use std::time::Instant;
+
+    for i in 0..3 {
+        let start = Instant::now();
+        let id = Identity::new("Robert Lee Mitchell", "banana colored duckling");
+        let _ = id.password("masterpasswordapp.com", 1, TYPE_LONG);
+
+        println!("run {}: master key in {} ms", i + 1, start.elapsed().as_millis());
     }
 }
 

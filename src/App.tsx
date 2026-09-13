@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { api, type Derived, type SiteView } from "./api";
 
@@ -114,6 +114,26 @@ export default function App() {
       cancelled = true;
     };
   }, [selectedName, counter, typeCode, loginType]);
+
+  // Auto-dismiss the status toast.
+  useEffect(() => {
+    if (!status) {
+      return;
+    }
+
+    const timer = setTimeout(() => setStatus(null), 2000);
+
+    return () => clearTimeout(timer);
+  }, [status]);
+
+  // Keep the keyboard-selected row visible.
+  useEffect(() => {
+    const el = document.querySelector(".list-item.selected");
+
+    if (el) {
+      el.scrollIntoView({ block: "nearest" });
+    }
+  }, [selectedName]);
 
   async function doUnlock(e: FormEvent) {
     e.preventDefault();
@@ -242,6 +262,37 @@ export default function App() {
     setDerived(null);
   }
 
+  // Keyboard-first navigation from the search box: arrows move the selection,
+  // Enter copies the selected (or top) match, Escape clears the filter.
+  function onSearchKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (displayed.length === 0) {
+      return;
+    }
+
+    const idx = displayed.findIndex((s) => s.name === selectedName);
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const next = displayed[Math.min(displayed.length - 1, idx + 1)] ?? displayed[0];
+
+      selectSite(next.name, next);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const prev = displayed[Math.max(0, idx - 1)] ?? displayed[0];
+
+      selectSite(prev.name, prev);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const target = displayed[idx] ?? displayed[0];
+
+      if (target) {
+        openAndCopy(target.name, target);
+      }
+    } else if (e.key === "Escape") {
+      setFilter("");
+    }
+  }
+
   if (!unlocked) {
     return (
       <div className="unlock">
@@ -280,8 +331,10 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <input
+          autoFocus
           className="search"
           onChange={(e) => setFilter(e.currentTarget.value)}
+          onKeyDown={onSearchKeyDown}
           placeholder="Search or type a new site domain…"
           value={filter}
         />

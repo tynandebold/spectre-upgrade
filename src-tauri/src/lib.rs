@@ -94,9 +94,12 @@ fn unlock(
         return Err("full name and master password are required".to_string());
     }
 
+    let t_key = std::time::Instant::now();
     let key = spectre_core::master_key(&full_name, &master_password);
     let identity = Identity::from_master_key(&full_name, key);
+    let key_ms = t_key.elapsed().as_millis();
 
+    let t_load = std::time::Instant::now();
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let vault_path = dir.join("vault.spectre");
@@ -121,6 +124,11 @@ fn unlock(
     };
 
     let site_count = vault.sites.len();
+    eprintln!(
+        "[unlock] master key {key_ms} ms, vault load {} ms, {site_count} sites",
+        t_load.elapsed().as_millis()
+    );
+
     let session = Session { key, identity, vault, vault_path };
 
     *state.session.lock().map_err(|_| lock_poisoned())? = Some(session);
