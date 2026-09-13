@@ -1,5 +1,6 @@
 # Spectre Upgrade
 
+[![CI](https://github.com/tynandebold/spectre-upgrade/actions/workflows/ci.yml/badge.svg)](https://github.com/tynandebold/spectre-upgrade/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A local, offline desktop password manager for macOS that derives your passwords
@@ -65,6 +66,11 @@ npm install
 npm run tauri build
 cp -R "target/release/bundle/macos/Spectre Upgrade.app" /Applications/
 ```
+
+> [!NOTE]
+> Because the build is ad-hoc signed, each rebuild produces a new signature, so
+> after rebuilding macOS may re-prompt for Keychain access and you may need to
+> re-enable Touch ID once.
 
 ## First run
 

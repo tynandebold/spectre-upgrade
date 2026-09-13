@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend deps
+        run: npm ci
+
+      # Typecheck (tsc) and build the frontend. This also produces dist/, which
+      # the Tauri app crate embeds at compile time.
+      - name: Typecheck and build frontend
+        run: npm run build
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Test derivation engine and vault
+        run: cargo test -p spectre-core -p spectre-vault
+
+      - name: Build the Tauri app crate
+        run: cargo build -p spectre-upgrade-app
