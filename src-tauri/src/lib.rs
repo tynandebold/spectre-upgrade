@@ -46,6 +46,7 @@ struct SiteView {
     #[serde(rename = "lastUsed")]
     last_used: String,
     url: Option<String>,
+    stored: Option<String>,
     stateful: bool,
     algorithm: u8,
 }
@@ -76,6 +77,7 @@ impl SiteView {
             uses: site.uses,
             last_used: site.last_used.clone(),
             url: site.url.clone(),
+            stored: site.stored.clone(),
             stateful: site.is_stateful(),
             algorithm: site.algorithm,
         }
@@ -174,7 +176,7 @@ fn derive(
     let session = guard.as_ref().ok_or_else(locked_err)?;
 
     let password = if type_code >= STATEFUL_CLASS {
-        session.vault.sites.get(&name).and_then(|s| s.password.clone())
+        session.vault.sites.get(&name).and_then(|s| s.stored.clone())
     } else {
         session.identity.password(&name, counter, type_code)
     };
@@ -206,6 +208,7 @@ fn save_site(
     type_code: u16,
     login_type: u16,
     url: Option<String>,
+    stored: Option<String>,
     state: State<AppState>,
 ) -> Result<SiteView, String> {
     let mut guard = state.session.lock().map_err(|_| lock_poisoned())?;
@@ -220,11 +223,13 @@ fn save_site(
         last_used: String::new(),
         url: None,
         password: None,
+        stored: None,
     });
     entry.counter = counter;
     entry.type_code = type_code;
     entry.login_type = login_type;
     entry.url = url.filter(|u| !u.trim().is_empty());
+    entry.stored = stored.filter(|v| !v.trim().is_empty());
 
     let view = SiteView::from_entry(&name, entry);
     let key = session.key;

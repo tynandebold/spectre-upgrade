@@ -8,6 +8,7 @@ export interface SiteView {
   uses: number;
   lastUsed: string;
   url: string | null;
+  stored: string | null;
   stateful: boolean;
   algorithm: number;
 }
@@ -44,7 +45,8 @@ export const api = {
     typeCode: number,
     loginType: number,
     url: string | null,
-  ) => invoke<SiteView>("save_site", { name, counter, typeCode, loginType, url }),
+    stored: string | null,
+  ) => invoke<SiteView>("save_site", { name, counter, typeCode, loginType, url, stored }),
 
   recordUse: (name: string, nowIso: string) =>
     invoke<void>("record_use", { name, nowIso }),

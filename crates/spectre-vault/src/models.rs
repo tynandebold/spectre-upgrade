@@ -50,10 +50,15 @@ pub struct Site {
     pub last_used: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
-    /// Stored value for stateful entries (base64, as in the export). `None` for
-    /// derivable sites.
+    /// The original imported value for a stateful entry (base64 ciphertext, as
+    /// in the export). Kept only for round-trip export; not usable directly.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
+
+    /// This app's own plaintext value for a stateful ("own") entry. Encrypted at
+    /// rest with the rest of the vault. This is what the app displays and copies.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stored: Option<String>,
 }
 
 impl Site {

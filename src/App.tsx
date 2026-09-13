@@ -10,6 +10,7 @@ const PASSWORD_TYPES = [
   { code: 20, label: "Basic" },
   { code: 21, label: "PIN" },
   { code: 31, label: "Phrase" },
+  { code: 1056, label: "Own (saved)" },
 ];
 
 function typeLabel(code: number): string {
@@ -38,6 +39,7 @@ export default function App() {
   const [typeCode, setTypeCode] = useState(17);
   const [loginType, setLoginType] = useState(0);
   const [url, setUrl] = useState("");
+  const [storedValue, setStoredValue] = useState("");
 
   const [derived, setDerived] = useState<Derived | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -87,9 +89,10 @@ export default function App() {
       counter !== selectedSite.counter ||
       typeCode !== selectedSite.typeCode ||
       loginType !== selectedSite.loginType ||
-      (url || null) !== (selectedSite.url || null)
+      (url || null) !== (selectedSite.url || null) ||
+      (storedValue || null) !== (selectedSite.stored || null)
     );
-  }, [selectedName, selectedSite, counter, typeCode, loginType, url]);
+  }, [selectedName, selectedSite, counter, typeCode, loginType, url, storedValue]);
 
   // Re-derive whenever the selection or its (possibly unsaved) settings change.
   useEffect(() => {
@@ -164,6 +167,7 @@ export default function App() {
     setTypeCode(existing?.typeCode ?? 17);
     setLoginType(existing?.loginType ?? 0);
     setUrl(existing?.url ?? "");
+    setStoredValue(existing?.stored ?? "");
     setStatus(null);
   }
 
@@ -174,10 +178,6 @@ export default function App() {
     const c = existing?.counter ?? 1;
     const t = existing?.typeCode ?? 17;
     const l = existing?.loginType ?? 0;
-
-    if (t >= 1024) {
-      return;
-    }
 
     const d = await api.derive(name, c, t, l);
 
@@ -208,7 +208,14 @@ export default function App() {
       return;
     }
 
-    const saved = await api.saveSite(selectedName, counter, typeCode, loginType, url || null);
+    const saved = await api.saveSite(
+      selectedName,
+      counter,
+      typeCode,
+      loginType,
+      url || null,
+      isStateful ? storedValue || null : null,
+    );
 
     setStatus("Saved");
     await refreshSites();
@@ -412,27 +419,42 @@ export default function App() {
 
               <div className="field">
                 <div className="field-label">Password</div>
-                <div className="value-row">
-                  <code
-                    className="value big"
-                    onClick={() => doCopy("password", derived?.password ?? null)}
-                    title="Click to copy"
-                  >
-                    {isStateful
-                      ? derived?.password ?? "— stored in original app —"
-                      : derived?.password ?? "…"}
-                  </code>
-                  <button
-                    disabled={!derived?.password}
-                    onClick={() => doCopy("password", derived?.password ?? null)}
-                  >
-                    copy
-                  </button>
-                </div>
+                {isStateful ? (
+                  <div className="value-row">
+                    <input
+                      className="value big stored-input"
+                      onChange={(e) => setStoredValue(e.currentTarget.value)}
+                      placeholder="Paste your saved password for this site"
+                      value={storedValue}
+                    />
+                    <button
+                      disabled={!storedValue}
+                      onClick={() => doCopy("password", storedValue || null)}
+                    >
+                      copy
+                    </button>
+                  </div>
+                ) : (
+                  <div className="value-row">
+                    <code
+                      className="value big"
+                      onClick={() => doCopy("password", derived?.password ?? null)}
+                      title="Click to copy"
+                    >
+                      {derived?.password ?? "…"}
+                    </code>
+                    <button
+                      disabled={!derived?.password}
+                      onClick={() => doCopy("password", derived?.password ?? null)}
+                    >
+                      copy
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {!isStateful && (
-                <div className="controls">
+              <div className="controls">
+                {!isStateful && (
                   <div className="control">
                     <div className="field-label">Counter</div>
                     <div className="stepper">
@@ -441,21 +463,21 @@ export default function App() {
                       <button onClick={() => setCounter((c) => c + 1)}>+</button>
                     </div>
                   </div>
-                  <div className="control">
-                    <div className="field-label">Type</div>
-                    <select
-                      onChange={(e) => setTypeCode(Number(e.currentTarget.value))}
-                      value={typeCode}
-                    >
-                      {PASSWORD_TYPES.map((t) => (
-                        <option key={t.code} value={t.code}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                )}
+                <div className="control">
+                  <div className="field-label">Type</div>
+                  <select
+                    onChange={(e) => setTypeCode(Number(e.currentTarget.value))}
+                    value={typeCode}
+                  >
+                    {PASSWORD_TYPES.map((t) => (
+                      <option key={t.code} value={t.code}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
+              </div>
 
               <div className="field">
                 <div className="field-label">Login name</div>
