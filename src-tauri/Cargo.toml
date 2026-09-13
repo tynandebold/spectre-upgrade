@@ -23,5 +23,5 @@ spectre-core = { path = "../crates/spectre-core" }
 spectre-vault = { path = "../crates/spectre-vault" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.10"
-core-foundation-sys = "0.8"
+keyring = { version = "3", features = ["apple-native"] }
+robius-authentication = "0.3"

@@ -15,9 +15,10 @@ opt-level = 3
 opt-level = 3
 
 # Release profile lives at the workspace root (member-crate profiles are ignored).
+# LTO and codegen-units=1 are intentionally left at their fast defaults: they
+# make release builds much slower/heavier for a negligible size win on an app
+# this small.
 [profile.release]
-codegen-units = 1
-lto = true
 opt-level = 3
 panic = "abort"
 strip = true
