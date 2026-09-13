@@ -1,0 +1,13 @@
+[package]
+name = "spectre-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Local CLI for verifying spectre-core derivation against the reference app."
+
+[dependencies]
+spectre-core = { path = "../spectre-core" }
+rpassword = "7"
+
+[[bin]]
+name = "spectre"
+path = "src/main.rs"

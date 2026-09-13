@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/spectre-core", "crates/spectre-cli"]
+resolver = "2"

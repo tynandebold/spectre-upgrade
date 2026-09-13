@@ -1,0 +1,16 @@
+# Rust
+/target
+**/target
+
+# Node / Tauri (added in the UI phase)
+node_modules
+/dist
+
+# macOS
+.DS_Store
+
+# NEVER commit vault data or exports
+*.mpjson
+*.mpsites
+*.spectre
+vault*.json
