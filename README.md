@@ -125,7 +125,9 @@ cargo test          # algorithm + vault tests (incl. the official vector)
 
 ## Credits & license
 
-The Spectre / Master Password algorithm was created by
-[Maarten Billemont](https://spectre.app/) and is published under the MPL-2.0.
-This project is an independent reimplementation, released under the MIT License;
-see [`LICENSE`](./LICENSE).
+The Spectre / Master Password algorithm and reference implementation are by
+[Maarten Billemont](https://spectre.app/). The legacy Master Password code was
+MPL-2.0; the current [Spectre](https://gitlab.com/spectre.app) project is GPLv3.
+This project is an independent, clean-room reimplementation of the published v3
+algorithm (no code copied from those projects) and is released under the MIT
+License; see [`LICENSE`](./LICENSE).
